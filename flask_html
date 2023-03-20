@@ -1,0 +1,48 @@
+<html>
+	<head> 
+	<!--공대선배 라즈베리 파이썬 #13 라즈베리파이 제어용 웹사이트 만들기 html 파일-->
+	<!--https://www.youtube.com/channel/UCsiwB64NJe1JYFZ6iUeFQqA-->
+    <!--title은 브라우저 맨 위(제목표시줄)에 나오는 내용을 결정-->
+	<title>LED CONTROLLER</title>	
+	<meta name="viewport" content="width=device-width initial-scale=1">
+	</head> 
+	<body>
+		<!--본문 시작. h1은 가장 큰 글씨로 글자를 써줌-->
+		<h1>Web에서 라즈베리파이의 LED 제어하기</h1>
+		<!--hr은 수평 가로줄을 그려줌-->
+        <hr>
+
+		<div style="padding-left:20px;">
+        <!--h3는 중간크기 글씨로 글자를 써줌-->
+			<h3>적,녹,청 LED 각각 제어</h3>
+                <!--p는 위아래로 한줄 띄어서 글자를 써줌-->
+				<p style="color: red;">
+                    <!--b는 글자를 굵게(bold) 표시함-->
+					<b>빨간색 LED: </b>	
+                    <!--버튼을 만들어서, 버튼을 누르면 파이썬 코드의 LED_control 함수가 실행됨-->
+                    <!--color와 state는 함수의 입력인자-->
+					<a href="{{ url_for('LED_control', color='red', state=1) }}"><input type="button" value="ON" ></a>
+					<a href="{{ url_for('LED_control', color='red', state=0) }}"> <input type="button" value="OFF"> </a>
+				</p>
+				<p style="color: green;">
+					<b>초록색 LED: </b>	
+						
+					<a href="{{ url_for('LED_control', color='green', state=1) }}"><input type="button" value="ON" ></a>
+					<a href="{{ url_for('LED_control', color='green', state=0) }}"> <input type="button" value="OFF"> </a>
+				</p>
+				<p style="color: blue;">
+					<b>파란색 LED: </b>	
+				
+					<a href="{{ url_for('LED_control', color='blue', state=1) }}"><input type="button" value="ON" ></a>
+					<a href="{{ url_for('LED_control', color='blue', state=0) }}"> <input type="button" value="OFF"> </a>
+				</p>
+            <hr>
+			<h3>전체 LED 한번에 제어</h3>
+				<p style="padding-left:50px;"> 
+                    <a href="{{ url_for('whole_control', state=1) }}"> <input type="button" value="ON" ></a>
+					<a href="{{ url_for('whole_control', state=0) }}"> <input type="button" value="OFF"> </a>
+				</p>
+            <hr>
+		</div>
+	</body>
+</html>
