@@ -1,39 +1,42 @@
 import socket
 import threading
-import time
-import random
 
-# Replace this with the server's IP address
-SERVER_IP = 'your_server_ip'
+HOST = '0.0.0.0'
 PORT = 12345
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((SERVER_IP, PORT))
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((HOST, PORT))
+server.listen()
+
+clients = []
+client_names = []
+
+def broadcast(message):
+    for client in clients:
+        client.send(message)
+
+def handle(client):
+    while True:
+        try:
+            message = client.recv(1024)
+            broadcast(message)
+        except:
+            index = clients.index(client)
+            clients.remove(client)
+            client.close()
+            client_name = client_names[index]
+            client_names.remove(client_name)
+            broadcast(f'{client_name} disconnected.'.encode('utf-8'))
+            break
 
 def receive():
     while True:
-        try:
-            message = client.recv(1024).decode('utf-8')
-            if message == 'NAME':
-                client.send(client_name.encode('utf-8'))
-            else:
-                print(message)
-        except:
-            print("An error occurred!")
-            client.close()
-            break
+        client, address = server.accept()
+        print(f'Connected with {str(address)}')
 
-def send_sensor_data():
-    while True:
-        time.sleep(1)
-        sensor_data = random.uniform(20, 30)  # Simulating sensor data
-        message = f'{client_name}: {sensor_data:.2f}'
-        client.send(message.encode('utf-8'))
+        client.send('NAME'.encode('utf-8'))
+        client_name = client.recv(1024).decode('utf-8')
+        client_names.append(client_name)
+        clients.append(client)
 
-client_name = input("Enter your client name: ")
-
-receive_thread = threading.Thread(target=receive)
-receive_thread.start()
-
-send_sensor_data_thread = threading.Thread(target=send_sensor_data)
-send_sensor_data_thread.start()
+        print
