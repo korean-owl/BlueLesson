@@ -39,4 +39,11 @@ def receive():
         client_names.append(client_name)
         clients.append(client)
 
-        print
+        print(f'{client_name} connected.')
+        broadcast(f'{client_name} joined the chat!'.encode('utf-8'))
+
+        client_thread = threading.Thread(target=handle, args=(client,))
+        client_thread.start()
+
+print("Server is listening...")
+receive()
