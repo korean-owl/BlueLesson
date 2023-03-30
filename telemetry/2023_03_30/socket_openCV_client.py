@@ -3,7 +3,7 @@ import threading
 import cv2
 import numpy as np
 
-HOST = '127.0.0.1'  # Change this to the server IP if not running on the same machine
+HOST = '192.168.0.3'  # Change this to the server IP if not running on the same machine
 PORT = 12345
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
