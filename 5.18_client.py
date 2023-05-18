@@ -18,6 +18,8 @@ def get_array_from_server():
 
 # Get the array from the server
 received_array = get_array_from_server()
+# Display the received array
+print("Received array from server: ", received_array)
 
 import numpy as np
 import time
