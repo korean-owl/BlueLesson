@@ -23,7 +23,8 @@ CO_THRESHOLD = 36
 
 # Read the array from the txt file
 with open('array.txt', 'r') as f:
-    array = [int(x) for x in f.read().split()]
+    array_str = f.read().strip('()\n')  # strip parentheses and newline characters
+    array = [int(x) for x in array_str.split(',')]
 
 while True:
     # Wait for a connection
