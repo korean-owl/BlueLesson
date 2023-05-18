@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
+HOST = '192.168.0.28'
+PORT = 12355
+
 # Function to get the array from the server
 def get_array_from_server():
     # Create a socket object
@@ -32,9 +35,6 @@ from pymavlink import mavutil
 
 # Define a global variable for the sound sensor state
 sound_state = 0
-
-HOST = '192.168.0.28'
-PORT = 12355
 
 # Configure GPIO pins
 sound_pin = 17
