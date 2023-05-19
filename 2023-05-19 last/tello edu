@@ -17,13 +17,19 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Bind to the local address and port
 sock.bind(local_address)
-number_of_left_moves = 4
+number_of_left_moves = 5
 positions = [0] * number_of_left_moves
 left_moves = 0
 flag = 0
 drone_landed = False
 should_close = False
 path = 'C:\\Tello-EDU\\bluelesson.txt'
+
+# Each leg of the box will be 100 cm. Tello uses cm units by default.
+box_leg_distance = 45
+
+# Each leg of the box will be 100 cm. Tello uses cm units by default.
+box_down_distance = 70
 
 def send(message, delay):
     global flag
@@ -93,8 +99,9 @@ def video_streaming():
             cy = int(height/2)
 
             pixel_center = hsv_frame[cy,cx]
+            hue_value = pixel_center[0]
 
-            lower_blue = np.array([100,100,120])
+            lower_blue = np.array([90,90,100])
             upper_blue = np.array([150,255,255])
 
             mask = cv2.inRange(hsv_frame, lower_blue, upper_blue)
@@ -126,8 +133,7 @@ receiveThread = threading.Thread(target=receive)
 receiveThread.daemon = True
 receiveThread.start()
 
-# Each leg of the box will be 100 cm. Tello uses cm units by default.
-box_leg_distance = 20
+
 
 # Put Tello into command mode
 send("command", 3)
@@ -141,8 +147,10 @@ videoThread.start()
 # Send the takeoff command
 send("takeoff", 8)
 
+send("down " + str(100 - box_down_distance), 5)
+
 # Loop and create each leg of the box
-for i in range(4):
+for i in range(number_of_left_moves):
     # Fly left
     send("left " + str(box_leg_distance), 4)
     
