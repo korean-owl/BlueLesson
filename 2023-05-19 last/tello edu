@@ -1,0 +1,166 @@
+import socket
+import threading
+import time
+import cv2
+import numpy as np
+
+# IP and port of Tello
+tello_ip = '192.168.10.1'
+tello_port = 8889
+tello_address = (tello_ip, tello_port)
+
+# IP and port of local computer
+local_address = ('', 9010)
+
+# Create a UDP connection that we'll send the command to
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Bind to the local address and port
+sock.bind(local_address)
+number_of_left_moves = 4
+positions = [0] * number_of_left_moves
+left_moves = 0
+flag = 0
+drone_landed = False
+should_close = False
+path = 'C:\\Tello-EDU\\bluelesson.txt'
+
+def send(message, delay):
+    global flag
+    global left_moves
+    global drone_landed
+    global should_close
+ 
+    try:
+        sock.sendto(message.encode(), tello_address)
+        print("Sending message: " + message)
+        if "left" in message:
+            time.sleep(delay)
+            flag = 1
+            print("flag = 1")
+            left_moves += 1
+            print("left_moves = 1")
+
+            time.sleep(delay)
+            flag = 0
+            print("flag = 0")
+        if "land" in message:
+            drone_landed = True
+            should_close = True
+
+    except Exception as e:
+        print("Error sending: " + str(e))
+        
+    time.sleep(delay)
+
+
+
+def receive():
+    while True:
+        if should_close:
+            break
+        try:
+            response, ip_address = sock.recvfrom(128)
+            try:
+                decoded_response = response.decode(encoding='utf-8')
+            except UnicodeDecodeError:
+                print("Received message could not be decoded as UTF-8. Skipping.")
+                continue
+            print("Received message: from Tello EDU: " + response.decode(encoding='utf-8'))
+            
+        except Exception as e:
+            sock.close()
+            print("Error receiving: " + str(e))
+            break
+
+def video_streaming():
+    global positions
+    capture = cv2.VideoCapture('udp://0.0.0.0:11111',cv2.CAP_FFMPEG)
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    if not capture.isOpened():
+        capture.open('udp://0.0.0.0:11111')
+
+    while True:
+        ret, frame = capture.read()
+        if ret:
+            hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            height, width, _ = frame.shape
+
+            kernel = np.ones((5,5), np.uint8)
+
+            cx= int(width /2)
+            cy = int(height/2)
+
+            pixel_center = hsv_frame[cy,cx]
+
+            lower_blue = np.array([100,100,120])
+            upper_blue = np.array([150,255,255])
+
+            mask = cv2.inRange(hsv_frame, lower_blue, upper_blue)
+
+            res = cv2.bitwise_and(frame, frame, mask=mask)
+
+            erosion = cv2.erode(res, kernel, iterations = 1)
+
+            dilation = cv2.dilate(erosion, kernel, iterations =5)
+
+            pixel_center_bgr = frame[cy, cx]
+            if np.any(dilation):
+                print("blue")
+            if np.any(dilation) and flag == 1:
+                positions[left_moves-1] = 1  # Blue detected
+                print(f"Blue color detected after left move {left_moves}")
+            
+            cv2.imshow('frame', dilation)
+            if drone_landed or cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    capture.release()
+    cv2.destroyAllWindows()
+
+
+
+
+# Create and start a listening thread that runs in the background
+receiveThread = threading.Thread(target=receive)
+receiveThread.daemon = True
+receiveThread.start()
+
+# Each leg of the box will be 100 cm. Tello uses cm units by default.
+box_leg_distance = 20
+
+# Put Tello into command mode
+send("command", 3)
+
+# Start video streaming
+send("streamon", 3)
+videoThread = threading.Thread(target=video_streaming)
+videoThread.daemon = True
+videoThread.start()
+
+# Send the takeoff command
+send("takeoff", 8)
+
+# Loop and create each leg of the box
+for i in range(4):
+    # Fly left
+    send("left " + str(box_leg_distance), 4)
+    
+
+# Land
+send("land", 5)
+
+# Stop video streaming
+send("streamoff", 3)
+
+# Print message
+print("Mission completed successfully!")
+
+videoThread.join()
+receiveThread.join()
+
+# Close the socket
+sock.close()
+print(positions)
+np.savetxt(path, np.array(positions).reshape(1,-1), fmt='%d', delimiter=',')
+
